@@ -1,4 +1,5 @@
 import pygame
+import node
 
 WIDTH = 800
 WINDOW = pygame.display.set_mode((WIDTH, WIDTH))
