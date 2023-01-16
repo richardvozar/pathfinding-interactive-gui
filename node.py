@@ -12,19 +12,19 @@ class Node:
         self._parent = parent
 
     @property
-    def row(self):
+    def y(self):
         return self._y
 
-    @row.setter
-    def row(self, n):
+    @y.setter
+    def y(self, n):
         self._y = n if 0 <= n < 20 else self._y
 
     @property
-    def col(self):
+    def x(self):
         return self._x
 
-    @col.setter
-    def col(self, n):
+    @x.setter
+    def x(self, n):
         self._x = n if 0 <= n < 20 else self._x
 
     @property
@@ -57,7 +57,7 @@ class Node:
 
     @state.setter
     def state(self, new_state):
-        self._state = new_state if 0 <= new_state <= 3 else self._state
+        self._state = new_state if 0 <= new_state <= 6 else self._state
 
     @property
     def neighbors(self):
@@ -84,14 +84,20 @@ class Node:
         if isinstance(n, Node):
             return math.dist([self.row, self.col], [n.row, n.col])
 
+    def is_same(self, other):
+        """
+        Returns with True if the node from the parameter is the same as the self.
+        :param other: Node
+        :return: bool
+        """
+        if isinstance(other, Node):
+            return self._x == other.x and self._y == other.y
+        else:
+            return False
 
-n0 = Node(7, 3, 1, 1, 1, None, 2)
-n1 = Node(3, 7, 1, 1, 1, None, 2)
-n2 = Node(-5, -9, 1, 1, 1, None, 3)
-n3 = Node(-9, -5, 1, 1, 1, None, 3)
 
-print(n1.__dict__)
-print(n2.__dict__)
-
-print(n1.distance(n2))
-print(n0.distance(n3))
+# n0 = Node(7, 3, 1, 1, 1, None, 2)
+# n3 = Node(7, 3, 1, 1, 1, None, 2)
+# n1 = Node(3, 7, 1, 1, 1, None, 2)
+#
+# print(n0.is_same(n3))

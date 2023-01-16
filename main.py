@@ -1,6 +1,7 @@
 import pygame
 import node
 
+
 WIDTH = 800
 WINDOW = pygame.display.set_mode((WIDTH, WIDTH))
 
@@ -21,6 +22,9 @@ EMPTY = 0
 WALL = 1
 PLAYER_ONE = 2
 PLAYER_TWO = 3
+OPEN_SET = 4
+CLOSED_SET = 5
+ROAD = 6
 
 board = [[0 for x in range(20)] for y in range(20)]
 
@@ -85,6 +89,11 @@ def reset_walls():
         for x in range(20):
             if board[y][x] == 1:
                 board[y][x] = 0
+
+
+def a_star(start_node, end_node):
+    open_set = {}
+
 
 
 def main():
