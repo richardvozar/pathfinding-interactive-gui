@@ -1,5 +1,6 @@
 import math
 
+
 class Node:
     def __init__(self, y, x, f, g, h, parent, state=0):
         self._y = y
@@ -94,7 +95,6 @@ class Node:
             return self._x == other.x and self._y == other.y
         else:
             return False
-
 
 # n0 = Node(7, 3, 1, 1, 1, None, 2)
 # n3 = Node(7, 3, 1, 1, 1, None, 2)

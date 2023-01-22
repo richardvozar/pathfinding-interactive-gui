@@ -1,8 +1,11 @@
 import pygame
-import node
+from node import Node
 
-
+# game
 WIDTH = 800
+ROWS = 20
+COLUMNS = 20
+SQUARE_SIZE = WIDTH // ROWS
 WINDOW = pygame.display.set_mode((WIDTH, WIDTH))
 
 # colors
@@ -26,28 +29,34 @@ OPEN_SET = 4
 CLOSED_SET = 5
 ROAD = 6
 
-board = [[0 for x in range(20)] for y in range(20)]
+board = [[0 for x in range(COLUMNS)] for y in range(ROWS)]
 
 
 def draw_grid(WINDOW):
     # WINDOW.fill(WHITE)
     for i in range(50):
-        pygame.draw.line(WINDOW, GREY, (0, i * 40), (WIDTH, i * 40))
-        pygame.draw.line(WINDOW, GREY, (i * 40, 0), (i * 40, WIDTH))
+        pygame.draw.line(WINDOW, GREY, (0, i * SQUARE_SIZE), (WIDTH, i * SQUARE_SIZE))
+        pygame.draw.line(WINDOW, GREY, (i * SQUARE_SIZE, 0), (i * SQUARE_SIZE, WIDTH))
     pygame.display.update()
 
 
 def draw_nodes(WINDOW):
-    for y in range(20):
-        for x in range(20):
+    for y in range(ROWS):
+        for x in range(COLUMNS):
             if board[y][x] == 0:
-                pygame.draw.rect(WINDOW, WHITE, (x * 40, y * 40, 40, 40))
+                pygame.draw.rect(WINDOW, WHITE, (x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
             elif board[y][x] == 1:
-                pygame.draw.rect(WINDOW, BLACK, (x * 40, y * 40, 40, 40))
+                pygame.draw.rect(WINDOW, BLACK, (x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
             elif board[y][x] == 2:
-                pygame.draw.rect(WINDOW, PURPLE, (x * 40, y * 40, 40, 40))
+                pygame.draw.rect(WINDOW, PURPLE, (x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
             elif board[y][x] == 3:
-                pygame.draw.rect(WINDOW, GREEN, (x * 40, y * 40, 40, 40))
+                pygame.draw.rect(WINDOW, GREEN, (x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+            elif board[y][x] == 4:
+                pygame.draw.rect(WINDOW, ORANGE, (x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+            elif board[y][x] == 5:
+                pygame.draw.rect(WINDOW, YELLOW, (x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+            elif board[y][x] == 6:
+                pygame.draw.rect(WINDOW, TURQUOISE, (x * SQUARE_SIZE, y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
 
 def draw_everything(WINDOW):
@@ -78,22 +87,85 @@ def set_player_two(x, y):
 
 
 def unset_players():
-    for y in range(20):
-        for x in range(20):
+    for y in range(ROWS):
+        for x in range(COLUMNS):
             if board[y][x] in [2, 3]:
                 board[y][x] = 0
 
 
 def reset_walls():
-    for y in range(20):
-        for x in range(20):
+    for y in range(ROWS):
+        for x in range(COLUMNS):
             if board[y][x] == 1:
                 board[y][x] = 0
 
 
-def a_star(start_node, end_node):
-    open_set = {}
+def get_min_f_node(open_set: list[Node]) -> Node:
+    min_f: int = open_set[0].f
+    min_node: Node = open_set[0]
 
+    for node in open_set:
+        if node.f < min_f:
+            min_f = node.f
+            min_node = node
+
+    return min_node
+
+
+def get_neighbors(node: Node, diagonal: bool) -> list[tuple[int, int]]:
+    x: int = node.x
+    y: int = node.y
+
+    is_first_column = x == 0
+    is_first_row = y == 0
+    is_last_column = x == COLUMNS - 1
+    is_last_row = y == ROWS - 1
+
+    isvalid_top_left = x >= 1 and y >= 1 and board[y - 1][x - 1] != 1
+    isvalid_top_right = x <= COLUMNS - 2 and y >= 1 and board[y - 1][x + 1] != 1
+    isvalid_bot_left = x >= 1 and y <= ROWS - 2 and board[y + 1][x - 1] != 1
+    isvalid_bot_right = x <= COLUMNS - 2 and y <= ROWS - 2 and board[y + 1][x + 1] != 1
+
+    neighbors: list[tuple[int, int]] = []
+
+    # left
+    if not is_first_column and board[y][x - 1] != 1:
+        neighbors.append((x - 1, y))
+    # right
+    if not is_last_column and board[y][x + 1] != 1:
+        neighbors.append((x + 1, y))
+    # top
+    if not is_first_row and board[y - 1][x] != 1:
+        neighbors.append((x, y - 1))
+    # bottom
+    if not is_last_row and board[y + 1][x] != 1:
+        neighbors.append((x, y + 1))
+
+    # diagonal
+    if diagonal:
+        # top-left
+        if isvalid_top_left and (board[x - 1][y] != 1 or board[x][y - 1] != 1):
+            neighbors.append((x - 1, y - 1))
+        # top-right
+        if isvalid_top_right and (board[x + 1][y] != 1 or board[x][y - 1] != 1):
+            neighbors.append((x + 1, y - 1))
+        # bottom-left
+        if isvalid_bot_left and (board[x - 1][y] != 1 or board[x][y + 1] != 1):
+            neighbors.append((x - 1, y + 1))
+        # bottom-right
+        if isvalid_bot_right and (board[x + 1][y] != 1 or board[x][y + 1] != 1):
+            neighbors.append((x + 1, y + 1))
+
+    return neighbors
+
+
+def a_star(start_node: Node, end_node: Node):
+    open_set = []
+    closed_set = []
+    open_set.append(start_node)
+
+    while open_set:
+        current = get_min_f_node(open_set)
 
 
 def main():
@@ -141,6 +213,13 @@ def main():
                 x = mouse_pos_x // 40
                 y = mouse_pos_y // 40
                 board[y][x] = build_wall(x, y)
+
+                # TODO: ONLY FOR TESTING, PLEASE REMOVE FROM HERE
+                neighbors = get_neighbors(Node(y, x, 0, 0, 0, None, 1), True)
+                for x, y in neighbors:
+                    board[y][x] = 5
+                # TODO: TO HERE
+
                 # print(f'{mouse_pos_x=}, {mouse_pos_y=}')
                 # print(f'{x=}, {y=}')
                 # draw_map()
